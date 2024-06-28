@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "cobbleblackout",
+  "version": "${version}",
+  "name": "Cobblemon Blackout",
+  "description": "Players blackout and get sent to their spawnpoint if all of their Pokemon are knocked out in the wild.",
+  "authors": [
+    "Sylvonir"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+  "license": "Insert License Here",
+  "icon": "assets/cobbleblackout/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "com.sylvonir.cobbleblackout.fabric.BlackoutFabric"
+      }
+    ]
+  },
+  "depends": {
+    "fabric": "*",
+    "minecraft": ">=1.20.1",
+    "cobblemon": ">=1.5",
+    "fabric-language-kotlin": ">=1.9"
+  }
+}
