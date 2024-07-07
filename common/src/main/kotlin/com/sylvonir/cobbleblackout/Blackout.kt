@@ -11,7 +11,7 @@ import net.minecraft.network.packet.s2c.play.EntityStatusEffectS2CPacket
 import net.minecraft.text.Text
 
 object Blackout {
-    const val MOD_ID = "cobbleblackout";
+    const val MOD_ID = "cobbleblackout"
 
     fun init() {
         CobblemonEvents.BATTLE_VICTORY.subscribe { handleVictoryEvent(it) }
@@ -26,6 +26,7 @@ object Blackout {
         }
         losers.filterIsInstance<PlayerBattleActor>().forEach {
             var player = it.entity ?: return
+            if (player.abilities.creativeMode) return
             val activeStatusEffects = HashMap(player.activeStatusEffects)
 
             val networkHandler = player.networkHandler
