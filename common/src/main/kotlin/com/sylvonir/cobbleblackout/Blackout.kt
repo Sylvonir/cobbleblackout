@@ -5,8 +5,6 @@ import com.cobblemon.mod.common.api.events.battles.BattleVictoryEvent
 import com.cobblemon.mod.common.api.scheduling.afterOnServer
 import com.cobblemon.mod.common.battles.actor.PlayerBattleActor
 import com.cobblemon.mod.common.util.party
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.s2c.play.EntityStatusEffectS2CPacket
 import net.minecraft.text.Text
 
@@ -43,9 +41,6 @@ object Blackout {
                 Text.translatableWithFallback("cobbleblackout.blackoutmessage", "You blacked out!"),
                 true
             )
-
-            player.addStatusEffect(StatusEffectInstance(StatusEffects.BLINDNESS, 40))
-            player.addStatusEffect(StatusEffectInstance(StatusEffects.SLOWNESS, 40, 3))
 
             //Wait for post-battle updates to finish
             afterOnServer(seconds = 0.5F) {
