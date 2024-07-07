@@ -25,8 +25,8 @@ object Blackout {
             return
         }
         losers.filterIsInstance<PlayerBattleActor>().forEach {
-            var player = it.entity ?: return
-            if (player.abilities.creativeMode) return
+            var player = it.entity ?: return@forEach
+            if (player.abilities.creativeMode) return@forEach
             val activeStatusEffects = HashMap(player.activeStatusEffects)
 
             val networkHandler = player.networkHandler
