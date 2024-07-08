@@ -5,7 +5,7 @@ import com.cobblemon.mod.common.api.events.battles.BattleVictoryEvent
 import com.cobblemon.mod.common.api.scheduling.afterOnServer
 import com.cobblemon.mod.common.battles.actor.PlayerBattleActor
 import com.cobblemon.mod.common.util.party
-import com.cobblemon.mod.common.util.toVec3d
+import com.cobblemon.mod.common.util.toBlockPos
 import net.minecraft.block.Blocks
 import net.minecraft.entity.EntityPose
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -70,6 +70,7 @@ object Blackout {
                         angle = MathHelper.wrapDegrees(MathHelper.atan2(vec3d.z, vec3d.x) * 57.2957763671875 - 90.0)
                             .toFloat()
                     }
+                    blockPos = optional.get().toBlockPos()
                 } else if (blockPos != null) {
                     blockPos = respawnWorld.spawnPos
                     player.networkHandler.sendPacket(
@@ -82,17 +83,19 @@ object Blackout {
                     blockPos = respawnWorld.spawnPos
                 }
 
-                var box = player.getDimensions(EntityPose.STANDING).getBoxAt(blockPos?.toVec3d())
+                var box = player.getDimensions(EntityPose.STANDING).getBoxAt(blockPos?.toCenterPos())
 
                 while (!respawnWorld.isSpaceEmpty(box) && box.minY < respawnWorld.topY) {
                     blockPos = blockPos?.up()
                     box = box.offset(0.0, 1.0, 0.0)
                 }
 
-                if (blockPos != null) {
+                val respawnPos = blockPos?.toCenterPos()
+
+                if (respawnPos != null) {
                     player.teleport(
                         respawnWorld,
-                        blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble(), angle, 0.0F
+                        respawnPos.x, respawnPos.y, respawnPos.z, angle, 0.0F
                     )
                 }
             }
