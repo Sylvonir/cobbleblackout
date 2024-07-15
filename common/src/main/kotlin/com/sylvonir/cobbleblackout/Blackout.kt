@@ -5,9 +5,8 @@ import com.cobblemon.mod.common.api.events.battles.BattleVictoryEvent
 import com.cobblemon.mod.common.api.scheduling.afterOnServer
 import com.cobblemon.mod.common.battles.actor.PlayerBattleActor
 import com.cobblemon.mod.common.util.party
-import com.cobblemon.mod.common.util.toBlockPos
 import net.minecraft.block.Blocks
-import net.minecraft.entity.EntityPose
+import net.minecraft.entity.Entity
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
@@ -55,14 +54,10 @@ object Blackout {
     }
 
     /**
-     * Mostly matches vanilla respawn behavior.
-     * Except always spawn at world spawn center
-     * instead of obeying spawnRadius gamerule,
-     * because the vanilla function for calculating it is not easily accessible,
-     * and I'm lazy.
+     * Should match vanilla respawn behavior.
      */
     private fun calcRespawnPosAndTeleport(player: ServerPlayerEntity) {
-        var blockPos = player.spawnPointPosition
+        val blockPos = player.spawnPointPosition
         var angle = player.spawnAngle
         val forced = player.isSpawnForced
         var optional = Optional.empty<Vec3d>()
@@ -74,42 +69,37 @@ object Blackout {
             respawnWorld = player.getServer()?.overworld
         }
 
+        //New players are automatically sent to world spawn position
+        val dummy = ServerPlayerEntity(player.server, respawnWorld, player.gameProfile)
+
         if (respawnWorld != null) {
             if (optional.isPresent) { // If valid bed or anchor
+                val respawnPos = optional.get()
                 val blockState = respawnWorld.getBlockState(blockPos)
                 if (blockState != null && (blockState.isIn(BlockTags.BEDS) || blockState.isOf(Blocks.RESPAWN_ANCHOR))) {
-                    val vec3d = Vec3d.ofBottomCenter(blockPos).subtract(optional.get()).normalize()
+                    val vec3d = Vec3d.ofBottomCenter(blockPos).subtract(respawnPos).normalize()
                     angle = MathHelper.wrapDegrees(MathHelper.atan2(vec3d.z, vec3d.x) * 57.2957763671875 - 90.0)
                         .toFloat()
                 }
-                blockPos = optional.get().toBlockPos()
+                dummy.refreshPositionAndAngles(respawnPos.x, respawnPos.y, respawnPos.z, angle, 0.0F)
             } else if (blockPos != null) { // If invalid bed or anchor
-                blockPos = respawnWorld.spawnPos
                 player.networkHandler.sendPacket(
                     GameStateChangeS2CPacket(
                         GameStateChangeS2CPacket.NO_RESPAWN_BLOCK,
                         GameStateChangeS2CPacket.DEMO_OPEN_SCREEN.toFloat()
                     )
                 )
-            } else { // If no bed or anchor
-                blockPos = respawnWorld.spawnPos
             }
 
-            var box = player.getDimensions(EntityPose.STANDING).getBoxAt(blockPos?.toCenterPos())
-
-            while (!respawnWorld.isSpaceEmpty(box) && box.minY < respawnWorld.topY) {
-                blockPos = blockPos?.up()
-                box = box.offset(0.0, 1.0, 0.0)
+            while (!respawnWorld.isSpaceEmpty(dummy) && dummy.y < respawnWorld.topY.toDouble()) {
+                dummy.setPosition(dummy.x, dummy.y + 1.0, dummy.z)
             }
-
-            val respawnPos = blockPos?.toCenterPos()
-
-            if (respawnPos != null) {
-                player.teleport(
-                    respawnWorld,
-                    respawnPos.x, respawnPos.y, respawnPos.z, angle, 0.0F
-                )
-            }
+            player.teleport(
+                respawnWorld,
+                dummy.x, dummy.y, dummy.z, dummy.yaw, 0.0F
+            )
+            dummy.serverWorld.removePlayer(dummy, Entity.RemovalReason.DISCARDED)
         }
     }
 }
+
